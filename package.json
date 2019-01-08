@@ -1,0 +1,23 @@
+{
+  "name": "snomed-template-translate",
+  "version": "0.0.1",
+  "description": "Tool to translate fully defined SNOMED CT concepts",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danka74/snomed-template-translate.git"
+  },
+  "author": "daniel.karlsson@socialstyrelsen.se",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/danka74/snomed-template-translate/issues"
+  },
+  "homepage": "https://github.com/danka74/snomed-template-translate#readme",
+  "dependencies": {
+    "mysql": "^2.16.0",
+    "nodejs-mysql": "^0.1.3"
+  }
+}

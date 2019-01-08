@@ -1,13 +1,13 @@
 const mysql = require('nodejs-mysql').default;
 
 const db = mysql.getInstance({
-  host: 'localhost',
+  host: '10.3.24.7',
   user: 'root',
   password: process.env.MYSQL_PASSWORD,
   database: 'snomed_full_20190131'
 });
 
-const sql = `select c.id, c.fsn, c.semtag, r.typeId, r.destinationId, d.term
+const sql = `select c.id, c.fsn, c.semtag, r.relationshipGroup, r.typeId, r.destinationId, d.term
 from concepts_snap2 c
   join transitiveclosure t on c.id = t.subtypeId
   join relationships_snap r on c.id = r.sourceId
@@ -20,13 +20,42 @@ where c.active = 1
   and c.id in (select id from concepts group by id having count(id) = 1)
   and c.definitionStatusId <> 900000000000074008
   and r.typeId <> 116680003
-order by c.id, r.typeId`;
+order by c.id, r.groupId, r.typeId`;
+
+const neverGrouped = [
+
+];
 
 db.exec(sql)
     .then(rows => {
-	for (var i = 0; i < rows.length; i++) {
-  		console.log(rows[i]);
-  	}
+        let concepts = [];
+        let group = null;
+        
+        for (var i = 0; i < rows.length; i++) {
+            const r = rows[i];
+
+            if(r.id != concept.id) {
+                concepts[r.id] = { 
+                    fsn: r.fsn,
+                    rels: [],
+                    groups: []
+                };
+            }
+            
+            if(neverGrouped.indexOf(r.typeId) != -1) {
+                concepts[r.id].rels.push({ 
+                    type: r.typeId,
+                    term: r.term
+                });
+            } else {
+                concepts[r.id].groups[r.relationshipGroup].push({ 
+                    type: r.typeId,
+                    term: r.term
+                });
+            }           
+        };
+
+        console.log(concepts);
     })
     .catch(error => {
         console.log(error);

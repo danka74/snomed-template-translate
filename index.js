@@ -1,4 +1,4 @@
-import mysql from 'nodejs-mysql';
+const mysql = require('nodejs-mysql').default;
 
 const db = mysql.getInstance({
   host: 'localhost',

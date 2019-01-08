@@ -24,9 +24,9 @@ order by c.id, r.typeId`;
 
 db.exec(sql)
     .then(rows => {
-        for(row in rows) {
-            console.log(row);
-        }
+	for (var i = 0; i < rows.length; i++) {
+  		console.log(rows[i]);
+  	}
     })
     .catch(error => {
         console.log(error);

@@ -4,7 +4,9 @@ const db = mysql.getInstance({
   host: '10.3.24.7',
   user: 'root',
   password: process.env.MYSQL_PASSWORD,
-  database: 'snomed_full_20190131'
+  database: 'snomed_full_20190131',
+  supportBigNumbers: true,
+  bigNumberStrings: true
 });
 
 const sql = `select c.id, c.fsn, c.semtag, r.relationshipGroup, r.typeId, r.destinationId, d.term
@@ -28,34 +30,7 @@ const neverGrouped = [
 
 db.exec(sql)
     .then(rows => {
-        let concepts = [];
-        let group = null;
         
-        for (var i = 0; i < rows.length; i++) {
-            const r = rows[i];
-
-            if(r.id != concept.id) {
-                concepts[r.id] = { 
-                    fsn: r.fsn,
-                    rels: [],
-                    groups: []
-                };
-            }
-            
-            if(neverGrouped.indexOf(r.typeId) != -1) {
-                concepts[r.id].rels.push({ 
-                    type: r.typeId,
-                    term: r.term
-                });
-            } else {
-                concepts[r.id].groups[r.relationshipGroup].push({ 
-                    type: r.typeId,
-                    term: r.term
-                });
-            }           
-        };
-
-        console.log(concepts);
     })
     .catch(error => {
         console.log(error);

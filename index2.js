@@ -62,7 +62,7 @@ const concepts = rows.reduce((concepts, row, index, array) => {
     return concepts;
 }, []);
 
-console.log("Number of concepts found = " + concepts.length);
+//console.log("Number of concepts found = " + concepts.length);
 
 const combineTerms = function(total, term, index, length) {
     if(index == 0) {
@@ -82,7 +82,7 @@ const numerize = function(word) {
         return "2";
     } else
     if(word === "tre") {
-        return "3";
+        return "3";766939001
     } else
     if(word === "fyra") {
         return "4";
@@ -121,7 +121,7 @@ const aggregateCS = function(currentCS, newCS) {
 
 // map concept objects to new term objects
 const newTerms = concepts.map(concept => {
-    let term = "läkemedel som ";
+    let term = "läkemedel ";
     let caseSignificanceId = 900000000000448009;
 
     // count number of "has active ingredient" or "has precise active ingredient" relationships
@@ -144,18 +144,15 @@ const newTerms = concepts.map(concept => {
         return total;   
     }, 0);
 
-    // if stated ingredient count is not 0 and the numbers match, it is a "containing only" drug
-    if(statedCount != 0 && statedCount == numberIngredients) {
-        term += "endast innehåller ";
-    } else {
-        term += "innehåller ";
-    }
+
 
     // mismatch can happen when there are missing translations
     if(statedCount != 0 && statedCount != numberIngredients) {
         term += "*saknas översättning*";
         missingCount++;
     }
+
+
 
     if(concept.semtag === "medicinal product" || concept.semtag === "product") {
         const wordList = concept.groups.reduce((total, group) => {
@@ -169,6 +166,15 @@ const newTerms = concepts.map(concept => {
         const words = wordList.reduce((total, word, index, wordList) => {
             return combineTerms(total, word, index, wordList.length);
         }, "");
+     
+        // if stated ingredient count is not 0 and the numbers match, it is a "containing only" drug
+        if(wordList.length > 0) {
+            if(statedCount != 0 && statedCount == numberIngredients) {
+                term += "som endast innehåller ";
+            } else {
+                term += "som innehåller ";
+            }
+        }
         term += words;
     }
 
@@ -184,6 +190,14 @@ const newTerms = concepts.map(concept => {
         const words = wordList.reduce((total, word, index, wordList) => {
             return combineTerms(total, word, index, wordList.length);
         }, "");
+        // if stated ingredient count is not 0 and the numbers match, it is a "containing only" drug
+        if(wordList.length > 0) {
+            if(statedCount != 0 && statedCount == numberIngredients) {
+                term += "som endast innehåller ";
+            } else {
+                term += "som innehåller ";
+            }
+        }
         term += words;
 
         const form = concept.groups.reduce((total, group) => {
@@ -246,10 +260,18 @@ const newTerms = concepts.map(concept => {
 
             return total;
         }, [])
-
+        768274000
         const words = wordList.reduce((total, word, index, wordList) => {
             return combineTerms(total, word, index, wordList.length);
         }, "");
+        // if stated ingredient count is not 0 and the numbers match, it is a "containing only" drug
+        if(wordList.length > 0) {
+            if(statedCount != 0 && statedCount == numberIngredients) {
+                term += "som endast innehåller ";
+            } else {
+                term += "som innehåller ";
+            }
+        }
         term += words;
 
         const form = concept.groups.reduce((total, group) => {
@@ -264,6 +286,26 @@ const newTerms = concepts.map(concept => {
             term += " i " + form;
         }
         
+    }
+
+    if(concept.semtag === "product") {
+        const wordList = concept.groups.reduce((total, group) => {
+            let rel = group.rels.find(r => r.typeId == 766939001) // 127489000 | Has active ingredient (attribute) |, 762949000 | Has precise active ingredient (attribute) |
+            if(rel) {
+                total.push(rel.term);
+                caseSignificanceId = aggregateCS(caseSignificanceId, rel.caseSignificanceId);
+            }
+            return total;
+        }, []);
+
+        const words = wordList.reduce((total, word, index, wordList) => {
+            return combineTerms(total, word, index, wordList.length);
+        }, "");
+
+        if(wordList.length > 0) {
+            term += "med " + words + " ";
+        }
+
     }
 
     return { 

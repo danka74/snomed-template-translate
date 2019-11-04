@@ -14,6 +14,7 @@
                     sctid: row.id,
                     fsn: row.fsn,
                     semtag: row.semtag,
+                    drug: row.drug,
                     groups: [ {
                         group: row.relationshipGroup,
                         rels: [ {
@@ -123,19 +124,32 @@
             return currentCS;
         }
 
+        const doseFormPreposition = function(doseForm) {
+            if(doseForm.indexOf("form") !== -1) {
+                return "i";
+            } else {
+                return "som";
+            }
+        }
+
         // map concept objects to new term objects
         const newTerms = concepts.map(concept => {
-            let term = "läkemedel ";
+            let term = "";
+            if(concept.drug === 1) {
+                term = "läkemedel "
+            } else {
+                term = "produkt "
+            }
             let caseSignificanceId = 900000000000448009;
 
             // count number of "has active ingredient" or "has precise active ingredient" relationships
-            // const numberIngredients = concept.groups.reduce((total, group) => {
-            //     if(group.rels.find(r => r.typeId === 127489000 || r.typeId === 762949000)) {
-            //         return total + 1;
-            //     } else {
-            //         return total;
-            //     }
-            // }, 0);
+            const numberIngredients = concept.groups.reduce((total, group) => {
+                 if(group.rels.find(r => r.typeId === 127489000 || r.typeId === 762949000)) {
+                     return total + 1;
+                 } else {
+                     return total;
+                 }
+            }, 0);
 
             // extract the stated number of active ingredients
             const statedCount = concept.groups.reduce((total, group) => {
@@ -147,6 +161,10 @@
                 }
                 return total;   
             }, 0);
+
+            // if(statedCount > 0 && numberIngredients != statedCount) {
+            //     console.log(concept);
+            // }
 
             if(concept.semtag === "medicinal product" || concept.semtag === "product") {
                 const wordList = concept.groups.reduce((total, group) => {
@@ -203,7 +221,7 @@
                     return total;
                 }, null);
                 if(form) {
-                    term += " i " + form;
+                    term += " " + doseFormPreposition(form) + " " + form;
                 }
                 
             }
@@ -230,11 +248,20 @@
                         const denominatorVal = group.rels.find(r => r.typeId === 732946004 || r.typeId === 733723002);
                         const denominatorUnit = group.rels.find(r => r.typeId === 732947008 || r.typeId === 733722007);
 
+                        let pluralis = false;
                         if(numeratorVal) {
+                            const num = numerize(numeratorVal.term.replace(/ /g, ''));
+                            if(num > 1) {
+                                pluralis = true;
+                            }
                             phrase += " " + numerize(numeratorVal.term);
                         }
                         if(numeratorUnit) {
-                            phrase += " " +  numeratorUnit.term;
+                            if(numeratorUnit.term === "enhet" && pluralis) {
+                                phrase += " enheter";
+                            } else {
+                                phrase += " " +  numeratorUnit.term;
+                            }
                             caseSignificanceId = aggregateCS(caseSignificanceId, numeratorUnit.caseSignificanceId);
                         }
                         if(denominatorVal && denominatorUnit && denominatorVal.term === "ett") {
@@ -254,13 +281,13 @@
 
                     return total;
                 }, [])
-                768274000
+                
                 const words = wordList.reduce((total, word, index, wordList) => {
                     return combineTerms(total, word, index, wordList.length);
                 }, "");
                 // if stated ingredient count is not 0 and the numbers match, it is a "containing only" drug
                 if(wordList.length > 0) {
-                    term += "som innehåller precis "
+                    term += "som endast innehåller exakt "
                     // if(statedCount != 0 && statedCount == numberIngredients) {
                     //     term += "som endast innehåller ";
                     // } else {
@@ -278,7 +305,7 @@
                     return total;
                 }, null);
                 if(form) {
-                    term += " i " + form;
+                    term += " " + doseFormPreposition(form) + " " + form;
                 }
                 
             }
@@ -298,7 +325,7 @@
                 }, "");
 
                 if(wordList.length > 0) {
-                    term += "med " + words + " ";
+                    term += "med " + words;
                 }
 
             }
@@ -306,7 +333,7 @@
             return { 
                         sctid: concept.sctid,
                         fsn: concept.fsn,
-                        newTerm: term,
+                        newTerm: term.trim(),
                         caseSignificanceId: caseSignificanceId
             };
         });

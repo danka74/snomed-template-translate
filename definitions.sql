@@ -1,4 +1,5 @@
-select c.id, c.fsn, c.semtag, r.relationshipGroup, r.typeId, r.destinationId, d.term, d.caseSignificanceId
+select c.id, c.fsn, c.semtag, r.relationshipGroup, r.typeId, r.destinationId, d.term, d.caseSignificanceId, 
+  c.id in (select subtypeId from transitiveclosure where supertypeId = 763158003) as drug
 from concepts_snap2 c
   join transitiveclosure t on c.id = t.subtypeId
   join relationships_snap r on c.id = r.sourceId
